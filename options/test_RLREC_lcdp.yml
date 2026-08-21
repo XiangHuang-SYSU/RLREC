@@ -1,0 +1,79 @@
+# general settings
+name: test_RLREC_S2_lcdp_25000
+model_type: RLRECS2Model
+scale: 1
+num_gpu: auto  # auto: can infer from your visible devices automatically. official: 4 GPUs
+manual_seed: 0
+
+
+# dataset and data loader settings
+datasets:
+  # Uncomment these for validation
+  val_1:
+    name: lcdp
+    type: PairedDataset
+    dataroot_gt: your-path/LCDP/lcdp_dataset/test-gt
+    dataroot_lq: your-path/LCDP/lcdp_dataset/test-input
+    io_backend:
+      type: disk
+
+
+# network structures
+network_g:
+  type: RLRECS2
+  inp_channels: 3
+  out_channels: 3
+  dim: 24
+  num_blocks: [2,2,2,2]
+  num_refinement_blocks: 2
+  heads: [4,4,4,4]
+  ffn_expansion_factor: 2
+  bias: False
+  LayerNorm_type: WithBias
+  DINO_REPO_DIR: DINO/dinov3
+  linear_start: 0.1
+  linear_end: 0.99
+  timesteps: 4
+
+# network structures
+network_S1:
+  type: RLRECS1
+  inp_channels: 3
+  out_channels: 3
+  dim: 24
+  num_blocks: [2,2,2,2]
+  num_refinement_blocks: 2
+  heads: [4,4,4,4]
+  ffn_expansion_factor: 2
+  bias: False
+  LayerNorm_type: WithBias
+  DINO_REPO_DIR: DINO/dinov3
+
+# path
+path:
+  # use the pre-trained Real-ESRNet model
+  pretrain_network_g: experiments/train_RLREC_S2_lcdp/models/net_g_25000.pth
+  pretrain_network_S1: experiments/train_RLREC_S1_lcdp/models/net_g_300000.pth
+  param_key_g: params_ema
+  strict_load_g: False
+  ignore_resume_networks: network_S1
+
+
+
+val:
+  save_img: true
+  suffix: 'RLREC'  # add suffix to saved images, if None, use exp name
+  window_size: 8
+
+  metrics:
+    psnr: # metric name
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: False
+    ssim: # metric name
+      type: calculate_ssim
+      crop_border: 0
+      test_y_channel: False
+
+
+
